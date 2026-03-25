@@ -1,10 +1,9 @@
-# CineRanking
- O CineRanking é um sistema de avaliação de filmes desenvolvido por alunos do 4º ano do IFRN - Campus Caicó
+# MovieScore
+ O MoviScore é um sistema de avaliação de filmes desenvolvido por alunos do 4º ano do IFRN - Campus Caicó
 
 ## Dependências 
    - Python 3.13
    - Node.js 24.12.0
-     
 ## Tecnologias
   * Frontend
     - TypeScript

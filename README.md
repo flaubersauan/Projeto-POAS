@@ -1,5 +1,5 @@
 # MovieScore
- O MoviScore é um sistema de avaliação de filmes desenvolvido por alunos do 4º ano do IFRN - Campus Caicó
+ O MovieScore é um sistema de avaliação de filmes desenvolvido por alunos do 4º ano do IFRN - Campus Caicó
 
 ## Dependências 
    - Python 3.13

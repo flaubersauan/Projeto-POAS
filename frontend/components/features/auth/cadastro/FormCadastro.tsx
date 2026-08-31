@@ -1,81 +1,198 @@
 "use client";
 
-import { postCreateUsuario } from "@/actions/usuario";
+import { useState } from "react";
 import Button from "@/components/ui/Button";
-import InputAuth from "@/components/features/auth/InputAuth";
-import { CadastroFormData, cadastroSchema } from "@/lib/schemas/usuario";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import Swal from "sweetalert2";
-import FieldError from "@/components/features/auth/FieldError";
-
 
 export default function FormCadastro() {
-  const {register, handleSubmit, formState: { isSubmitting, errors }} = useForm<CadastroFormData>({
-    mode: "onBlur",
-    reValidateMode: "onBlur",
-    defaultValues: {
-      nome: "",
-      email: "",
-      senha: "",
-      confirmarSenha: ""
-    },
-    resolver: zodResolver(cadastroSchema)
+  const [step, setStep] = useState(0); // Estado para controlar o passo atual
+  const [formData, setFormData] = useState({
+    email: "",
+    nome: "",
+    senha: "",
+    confirmarSenha: "",
   });
+  const [showPassword, setShowPassword] = useState(false); // Estado para controlar a visibilidade da senha
 
-  async function onSubmit(data: CadastroFormData) {
-    try {
-      const response = await postCreateUsuario({
-        nome: data.nome,
-        email: data.email,
-        senha: data.senha
-      });
+  // Função para lidar com mudanças nos campos
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-      if (response?.status === 201) {
-        Swal.fire({
-          icon: "success",
-          title: "Usuário cadastrado",
-        })
-      }
-    } catch(error) {
-      Swal.fire({
-        icon: "question",
-        title: "Erro",
-        text: "Erro interno"
-      });
+  // Função para alternar a visibilidade da senha
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
+  // Função para avançar para o próximo passo
+  const handleNext = () => {
+    if (step < 3) {
+      setStep((prevStep) => prevStep + 1);
+    } else {
+      // Aqui você pode adicionar a lógica para cadastrar o usuário
+      console.log("Dados do formulário:", formData);
+      alert("Cadastro realizado com sucesso!");
     }
-  }
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div 
-        className="
-          flex flex-col gap-2 w-90
-        "
-      >
-        <h1 className="text-4xl font-medium mb-8 text-center">
-          Cadastro
-        </h1>
-
-        <div>
-          <InputAuth id="nome" labelValue="Nome de usuário" {...register("nome")}/>
-          {errors.nome && (<FieldError aria-invalid aria-describedby="nome">{errors.nome.message}</FieldError>)}
-        </div>
-        <div>
-          <InputAuth type="email" id="email" labelValue="Email" {...register("email")}/>
-          {errors.email && (<FieldError>{errors.email.message}</FieldError>)}
-        </div>
-        <div>
-          <InputAuth type="password" id="senha" labelValue="Senha" {...register("senha")}/>
-          {errors.senha && (<FieldError>{errors.senha.message}</FieldError>)}
-        </div>
-        <div>
-          <InputAuth type="password" id="confirmarSenha" labelValue="Confirme sua senha" {...register("confirmarSenha")}/>
-          {errors.confirmarSenha && (<FieldError>{errors.confirmarSenha.message}</FieldError>)}
-        </div>
-
-        <Button type="submit" className="mt-4" disabled={isSubmitting}>{isSubmitting ? "Cadastrando..." : "Cadastrar-se"}</Button>
+    <form
+      className="flex flex-col gap-4 p-4 rounded shadow-md w-96"
+      style={{ backgroundColor: "#373739" }}
+      onSubmit={(e) => e.preventDefault()}
+    >
+      {/* Campo de Email */}
+      <div>
+        <label htmlFor="email" className="text-white">
+          Email:
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          className="border p-2 rounded w-full"
+        />
       </div>
+
+      {/* Campo de Nome de Usuário */}
+      {step >= 1 && (
+        <div>
+          <label htmlFor="nome" className="text-white">
+            Nome de Usuário:
+          </label>
+          <input
+            type="text"
+            id="nome"
+            name="nome"
+            value={formData.nome}
+            onChange={handleChange}
+            required
+            className="border p-2 rounded w-full"
+          />
+        </div>
+      )}
+
+      {/* Campo de Senha */}
+      {step >= 2 && (
+        <div className="relative">
+          <label htmlFor="senha" className="text-white">
+            Senha:
+          </label>
+          <input
+            type={showPassword ? "text" : "password"}
+            id="senha"
+            name="senha"
+            value={formData.senha}
+            onChange={handleChange}
+            required
+            className="border p-2 rounded w-full"
+          />
+          <button
+            type="button"
+            onClick={togglePasswordVisibility}
+            className="absolute right-2 top-9"
+          >
+            {showPassword ? (
+              // Ícone de olho cortado
+              <svg
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                width="20"
+                height="20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5"
+                  fill="#666"
+                />
+              </svg>
+            ) : (
+              // Ícone de olho normal
+              <svg
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                width="20"
+                height="20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5"
+                  fill="#666"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Campo de Confirmar Senha */}
+      {step >= 3 && (
+        <div className="relative">
+          <label htmlFor="confirmarSenha" className="text-white">
+            Confirmar Senha:
+          </label>
+          <input
+            type={showPassword ? "text" : "password"}
+            id="confirmarSenha"
+            name="confirmarSenha"
+            value={formData.confirmarSenha}
+            onChange={handleChange}
+            required
+            className="border p-2 rounded w-full"
+          />
+          <button
+            type="button"
+            onClick={togglePasswordVisibility}
+            className="absolute right-2 top-9"
+          >
+            {showPassword ? (
+              // Ícone de olho cortado
+              <svg
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                width="20"
+                height="20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5"
+                  fill="#666"
+                />
+              </svg>
+            ) : (
+              // Ícone de olho normal
+              <svg
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                width="20"
+                height="20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5"
+                  fill="#13E00"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Botão Dinâmico */}
+      <Button onClick={handleNext} className="mt-4">
+        {step < 3 ? "Próximo" : "Cadastrar-se"}
+      </Button>
     </form>
   );
 }

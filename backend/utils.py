@@ -1,4 +1,5 @@
 import requests
+from typing import Optional
 from datetime import datetime, timezone
 from requests.exceptions import (
     ConnectionError,
@@ -21,7 +22,7 @@ def get_now_datetime_utc():
     return datetime.now(timezone.utc)
 
 
-def get_data(url: str, params: dict | None = None, headers: dict | None = None) -> dict:
+def get_data(url: str, params: Optional[dict] = None, headers: Optional[dict] = None) -> dict:
     """
     Realiza uma requisição GET para uma API externa e retorna o JSON.
 

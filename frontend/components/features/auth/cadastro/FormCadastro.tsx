@@ -3,34 +3,82 @@
 import { useState } from "react";
 import Button from "@/components/ui/Button";
 
+// Ícone de olho
+function EyeIcon({ visible }: { visible: boolean }) {
+  return visible ? (
+    // Olho aberto
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#f97316"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ) : (
+    // Olho fechado/riscado
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#f97316"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 3l18 18" />
+      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+      <path d="M9.9 4.2A10.5 10.5 0 0 1 12 4c6.5 0 10 8 10 8a18.5 18.5 0 0 1-3.1 4.3" />
+      <path d="M6.6 6.6C3.8 8.4 2 12 2 12s3.5 8 10 8c1.4 0 2.7-.3 3.8-.8" />
+    </svg>
+  );
+}
+
 export default function FormCadastro() {
-  const [step, setStep] = useState(0); // Estado para controlar o passo atual
+  const [step, setStep] = useState(0);
+
   const [formData, setFormData] = useState({
     email: "",
     nome: "",
     senha: "",
     confirmarSenha: "",
   });
-  const [showPassword, setShowPassword] = useState(false); // Estado para controlar a visibilidade da senha
+
+  // Controle independente para cada senha
+  const [showSenha, setShowSenha] = useState(false);
+  const [showConfirmarSenha, setShowConfirmarSenha] = useState(false);
 
   // Função para lidar com mudanças nos campos
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  // Função para alternar a visibilidade da senha
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
-
-  // Função para avançar para o próximo passo
+  // Avançar para o próximo passo
   const handleNext = () => {
     if (step < 3) {
       setStep((prevStep) => prevStep + 1);
     } else {
-      // Aqui você pode adicionar a lógica para cadastrar o usuário
+      // Verifica se as senhas são iguais
+      if (formData.senha !== formData.confirmarSenha) {
+        alert("As senhas não coincidem!");
+        return;
+      }
+
       console.log("Dados do formulário:", formData);
+
       alert("Cadastro realizado com sucesso!");
     }
   };
@@ -46,6 +94,7 @@ export default function FormCadastro() {
         <label htmlFor="email" className="text-white">
           Email:
         </label>
+
         <input
           type="email"
           id="email"
@@ -63,6 +112,7 @@ export default function FormCadastro() {
           <label htmlFor="nome" className="text-white">
             Nome de Usuário:
           </label>
+
           <input
             type="text"
             id="nome"
@@ -81,53 +131,25 @@ export default function FormCadastro() {
           <label htmlFor="senha" className="text-white">
             Senha:
           </label>
+
           <input
-            type={showPassword ? "text" : "password"}
+            type={showSenha ? "text" : "password"}
             id="senha"
             name="senha"
             value={formData.senha}
             onChange={handleChange}
             required
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded w-full pr-10"
           />
+
+          {/* Botão mostrar/ocultar senha */}
           <button
             type="button"
-            onClick={togglePasswordVisibility}
+            onClick={() => setShowSenha((prev) => !prev)}
             className="absolute right-2 top-9"
+            aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
           >
-            {showPassword ? (
-              // Ícone de olho cortado
-              <svg
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                width="20"
-                height="20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5"
-                  fill="#666"
-                />
-              </svg>
-            ) : (
-              // Ícone de olho normal
-              <svg
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                width="20"
-                height="20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5"
-                  fill="#666"
-                />
-              </svg>
-            )}
+            <EyeIcon visible={showSenha} />
           </button>
         </div>
       )}
@@ -138,53 +160,31 @@ export default function FormCadastro() {
           <label htmlFor="confirmarSenha" className="text-white">
             Confirmar Senha:
           </label>
+
           <input
-            type={showPassword ? "text" : "password"}
+            type={showConfirmarSenha ? "text" : "password"}
             id="confirmarSenha"
             name="confirmarSenha"
             value={formData.confirmarSenha}
             onChange={handleChange}
             required
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded w-full pr-10"
           />
+
+          {/* Botão mostrar/ocultar confirmação */}
           <button
             type="button"
-            onClick={togglePasswordVisibility}
+            onClick={() =>
+              setShowConfirmarSenha((prev) => !prev)
+            }
             className="absolute right-2 top-9"
+            aria-label={
+              showConfirmarSenha
+                ? "Ocultar confirmação de senha"
+                : "Mostrar confirmação de senha"
+            }
           >
-            {showPassword ? (
-              // Ícone de olho cortado
-              <svg
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                width="20"
-                height="20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5"
-                  fill="#666"
-                />
-              </svg>
-            ) : (
-              // Ícone de olho normal
-              <svg
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                width="20"
-                height="20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5"
-                  fill="#13E00"
-                />
-              </svg>
-            )}
+            <EyeIcon visible={showConfirmarSenha} />
           </button>
         </div>
       )}

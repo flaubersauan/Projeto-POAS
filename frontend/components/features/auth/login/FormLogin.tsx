@@ -2,6 +2,7 @@
 
 import Button from "@/components/ui/Button";
 import InputAuth from "@/components/features/auth/InputAuth";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import FieldError from "@/components/features/auth/FieldError";
@@ -11,6 +12,7 @@ import { alert } from "@/lib/alert";
 
 
 export default function FormLogin() {
+  const router = useRouter();
   const {register, handleSubmit, formState: { isSubmitting, errors }} = useForm<LoginFormData>({
     mode: "onBlur",
     reValidateMode: "onBlur",
@@ -34,6 +36,7 @@ export default function FormLogin() {
           title: "Login realizado",
           text: "Bem vindo!"
         })
+        router.push('/home');
       } else if (response?.status === 401) {
         alert.fire({
           icon: "question",

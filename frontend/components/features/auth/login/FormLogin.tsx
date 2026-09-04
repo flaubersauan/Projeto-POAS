@@ -4,15 +4,15 @@ import Button from "@/components/ui/Button";
 import InputAuth from "@/components/features/auth/InputAuth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
 import FieldError from "@/components/features/auth/FieldError";
 import { LoginFormData, loginSchema } from "@/lib/schemas/auth";
 import { login } from "@/actions/auth";
 import { alert } from "@/lib/alert";
+import useStepForm from "@/hooks/useStepForm";
 
 
 export default function FormLogin() {
-  const {register, handleSubmit, trigger, formState: { isSubmitting, errors }} = useForm<LoginFormData>({
+  const {register, handleSubmit, trigger, setFocus, formState: { isSubmitting, errors }} = useForm<LoginFormData>({
     mode: "onBlur",
     reValidateMode: "onBlur",
     defaultValues: {
@@ -21,32 +21,16 @@ export default function FormLogin() {
     },
     resolver: zodResolver(loginSchema)
   });
+  const { fields, step, handleNextStep, handleStepKeyDown } = useStepForm(
+    loginSchema,
+    trigger,
+    setFocus,
+  );
 
-  const [step, setStep] = useState(0);
-  const fields: Array<keyof LoginFormData> = ["email", "senha"];
-
-  async function handleNext() {
-    const current = fields[step];
-
-    // If last field, validate both and submit
-    if (current === "senha") {
-      const valid = await trigger(["email", "senha"]);
-      if (!valid) return;
-      return handleSubmit(async (data) => await onSubmit(data as LoginFormData))();
-    }
-
-    const valid = await trigger([current]);
-    if (!valid) return;
-
-    if (step < fields.length - 1) setStep((s) => s + 1);
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      void handleNext();
-    }
-  }
+  const handleButtonClick =
+    step < fields.length - 1
+      ? handleNextStep
+      : handleSubmit(onSubmit);
 
   async function onSubmit(data: LoginFormData) {
     try {
@@ -92,28 +76,31 @@ export default function FormLogin() {
 
         {step >= 0 && (
           <div>
-            <InputAuth type="email" id="email" labelValue="Email" {...register("email")} onKeyDown={handleKeyDown} />
+            <InputAuth type="email" id="email" labelValue="Email" {...register("email")} onKeyDown={handleStepKeyDown} />
             {errors.email && (<FieldError>{errors.email.message}</FieldError>)}
           </div>
         )}
 
         {step >= 1 && (
           <div>
-            <InputAuth type="password" id="senha" labelValue="Senha" {...register("senha")} onKeyDown={handleKeyDown} />
+            <InputAuth type="password" id="senha" labelValue="Senha" {...register("senha")} />
             {errors.senha && (<FieldError>{errors.senha.message}</FieldError>)}
           </div>
         )}
 
         
-        {step < fields.length - 1 ? (
-          <Button type="button" variant="outline" onClick={() => void handleNext()} disabled={isSubmitting}>
-            Próximo
-          </Button>
-        ) : (
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Aguarde..." : "Iniciar sessão"}
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant={step < fields.length - 1 ? "outline" : "primary"}
+          onClick={handleButtonClick}
+          disabled={isSubmitting}
+        >
+          {step < fields.length - 1
+            ? "Próximo"
+            : isSubmitting
+              ? "Aguarde..."
+              : "Iniciar Sessão"}
+        </Button>
       </div>
     </form>
   );

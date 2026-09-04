@@ -6,14 +6,14 @@ import InputAuth from "@/components/features/auth/InputAuth";
 import { CadastroFormData, cadastroSchema } from "@/lib/schemas/usuario";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
 import FieldError from "@/components/features/auth/FieldError";
 import { alert } from "@/lib/alert";
 import { redirect } from "next/navigation";
+import useStepForm from "@/hooks/useStepForm";
 
 
 export default function FormCadastro() {
-  const {register, handleSubmit, trigger, getValues, formState: { isSubmitting, errors }} = useForm<CadastroFormData>({
+  const {register, handleSubmit, trigger, setFocus, formState: { isSubmitting, errors }} = useForm<CadastroFormData>({
     mode: "onBlur",
     reValidateMode: "onBlur",
     defaultValues: {
@@ -24,6 +24,16 @@ export default function FormCadastro() {
     },
     resolver: zodResolver(cadastroSchema)
   });
+  const { fields, step, handleNextStep, handleStepKeyDown } = useStepForm(
+    cadastroSchema,
+    trigger,
+    setFocus,
+  );
+
+  const handleButtonClick =
+    step < fields.length - 1
+      ? handleNextStep
+      : handleSubmit(onSubmit);
 
   async function onSubmit(data: CadastroFormData) {
     try {
@@ -65,32 +75,6 @@ export default function FormCadastro() {
       });
     }
   }
-  const [step, setStep] = useState(0);
-  const fields: Array<keyof CadastroFormData> = ["nome", "email", "senha", "confirmarSenha"];
-
-  async function handleNext() {
-    const currentField = fields[step];
-
-    if (currentField === "confirmarSenha") {
-      const valid = await trigger(["senha", "confirmarSenha"]);
-      if (!valid) return;
-      return handleSubmit(onSubmit)();
-    }
-
-    const valid = await trigger([currentField]);
-    if (!valid) return;
-
-    if (step < fields.length - 1) {
-      setStep((s) => s + 1);
-    }
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      void handleNext();
-    }
-  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -99,42 +83,45 @@ export default function FormCadastro() {
 
         {step >= 0 && (
           <div>
-            <InputAuth id="nome" labelValue="Nome de usuário" {...register("nome")} onKeyDown={handleKeyDown} />
+            <InputAuth id="nome" labelValue="Nome de usuário" {...register("nome")} onKeyDown={handleStepKeyDown}/>
             {errors.nome && (<FieldError aria-invalid aria-describedby="nome">{errors.nome.message}</FieldError>)}
           </div>
         )}
 
         {step >= 1 && (
           <div>
-            <InputAuth type="email" id="email" labelValue="Email" {...register("email")} onKeyDown={handleKeyDown} />
+            <InputAuth type="email" id="email" labelValue="Email" {...register("email")} onKeyDown={handleStepKeyDown}/>
             {errors.email && (<FieldError>{errors.email.message}</FieldError>)}
           </div>
         )}
 
         {step >= 2 && (
           <div>
-            <InputAuth type="password" id="senha" labelValue="Senha" {...register("senha")} onKeyDown={handleKeyDown} />
+            <InputAuth type="password" id="senha" labelValue="Senha" {...register("senha")} onKeyDown={handleStepKeyDown}/>
             {errors.senha && (<FieldError>{errors.senha.message}</FieldError>)}
           </div>
         )}
 
         {step >= 3 && (
           <div>
-            <InputAuth type="password" id="confirmarSenha" labelValue="Confirme sua senha" {...register("confirmarSenha")} onKeyDown={handleKeyDown} />
+            <InputAuth type="password" id="confirmarSenha" labelValue="Confirme sua senha" {...register("confirmarSenha")}/>
             {errors.confirmarSenha && (<FieldError>{errors.confirmarSenha.message}</FieldError>)}
           </div>
         )}
 
         
-        {step < fields.length - 1 ? (
-          <Button type="button" variant="outline" onClick={() => void handleNext()} disabled={isSubmitting}>
-            Próximo
-          </Button>
-        ) : (
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Cadastrando..." : "Cadastrar-se"}
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant={step < fields.length - 1 ? "outline" : "primary"}
+          onClick={handleButtonClick}
+          disabled={isSubmitting}
+        >
+          {step < fields.length - 1
+            ? "Próximo"
+            : isSubmitting
+              ? "Cadastrando..."
+              : "Cadastrar-se"}
+        </Button>
       </div>
     </form>
   );

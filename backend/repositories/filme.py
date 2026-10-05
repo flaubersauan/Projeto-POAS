@@ -9,7 +9,7 @@ from mappers.filme import FilmeMapper
 from models.conteudo import ApiFonte, Conteudo, TipoConteudo
 from models.filme import Filme
 from repositories.conteudo import ConteudoRepositoryDep
-from schemas.filme import FilmeListRead, FilmeRead
+from schemas.filme import FilmeFiltros, FilmeListRead, FilmeRead, GeneroFilme
 from utils import get_data, str_to_date
 
 
@@ -89,14 +89,28 @@ class FilmeRepository:
         return filme_api, filme_db
 
     def search_filmes(
-        self, busca: str, page: int = 1
+        self, busca: str | None, filtros: FilmeFiltros, page: int = 1
     ) -> tuple[list[FilmeListRead], int, int]:
         params = PARAMS_TMDB.copy()
-        params["query"] = busca
         params["page"] = page
 
+        if busca:
+            # /search/movie não aceita os filtros do /discover
+            params["query"] = busca
+            url = f"{TMDB_API_URL}/search/movie"
+        else:
+            # Sem busca, lista por /discover aplicando os filtros
+            url = f"{TMDB_API_URL}/discover/movie"
+            if filtros.generos:
+                params["with_genres"] = ",".join(str(genero_id) for genero_id in filtros.generos)
+            if filtros.ano is not None:
+                params["primary_release_year"] = filtros.ano
+            if filtros.nota_minima is not None:
+                params["vote_average.gte"] = filtros.nota_minima
+            params["sort_by"] = f"{filtros.ordenar_por.value}.{filtros.ordem.value}"
+
         data = get_data(
-            f"{TMDB_API_URL}/search/movie",
+            url,
             params=params,
             headers=HEADERS_TMDB,
         )
@@ -106,6 +120,18 @@ class FilmeRepository:
         total_results = data.get("total_results", 0)
 
         return filmes, total_pages, total_results
+
+    def list_generos(self) -> list[GeneroFilme]:
+        data = get_data(
+            f"{TMDB_API_URL}/genre/movie/list",
+            params=PARAMS_TMDB,
+            headers=HEADERS_TMDB,
+        )
+
+        return [
+            GeneroFilme(id=int(genero["id"]), nome=genero["name"])
+            for genero in data.get("genres", [])
+        ]
 
     def list_filmes_em_alta(
         self, page: int = 1

@@ -1,6 +1,6 @@
 from schemas.conteudo import ImagensConteudo
-from schemas.assistido import FilmeAssistidoRead, SerieAssistidaRead
-from models import Assistido, Filme, Serie
+from schemas.assistido import AnimeAssistidoRead, FilmeAssistidoRead, SerieAssistidaRead
+from models import Anime, Assistido, Filme, Serie
 from .filme import FilmeMapper
 from .serie import SerieMapper
 
@@ -48,4 +48,27 @@ class AssistidoMapper:
         return [
             AssistidoMapper.map_filme(filme, assistido)
             for filme, assistido in items
+        ]
+
+    @staticmethod
+    def map_anime(anime: Anime, assistido: Assistido) -> AnimeAssistidoRead:
+        # Kitsu já retorna URLs completas, sem prefixo de imagem do TMDB
+        return AnimeAssistidoRead(
+            id=anime.conteudo.id_externo,
+            titulo=anime.titulo,
+            titulo_original=anime.titulo_original,
+            status=anime.status,
+            imagens=ImagensConteudo(
+                capa=anime.capa,
+                banner=anime.banner,
+            ),
+            data_lancamento=anime.data_lancamento,
+            data_adicao=assistido.data_adicao,
+        )
+
+    @staticmethod
+    def map_animes(items: list[tuple[Anime, Assistido]]) -> list[AnimeAssistidoRead]:
+        return [
+            AssistidoMapper.map_anime(anime, assistido)
+            for anime, assistido in items
         ]

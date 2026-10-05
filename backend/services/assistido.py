@@ -6,10 +6,11 @@ from mappers.assistido import AssistidoMapper
 from exceptions import ConflictException, EntityNotFoundException, NotFoundException
 from models import Assistido
 from repositories import AssistidoRepositoryDep
-from schemas.assistido import FilmeAssistidoRead, SerieAssistidaRead
+from schemas.assistido import AnimeAssistidoRead, FilmeAssistidoRead, SerieAssistidaRead
 from .usuario import UsuarioServiceDep
 from .serie import SerieServiceDep
 from .filme import FilmeServiceDep
+from .anime import AnimeServiceDep
 
 
 class AssistidoService:
@@ -19,11 +20,13 @@ class AssistidoService:
         usuario_service: UsuarioServiceDep,
         serie_service: SerieServiceDep,
         filme_service: FilmeServiceDep,
+        anime_service: AnimeServiceDep,
     ):
         self.assistido_repository = assistido_repository
         self.usuario_service = usuario_service
         self.serie_service = serie_service
         self.filme_service = filme_service
+        self.anime_service = anime_service
 
     def get_assistido(self, assistido_id: int) -> Assistido:
         assistido = self.assistido_repository.get_assistido(assistido_id)
@@ -41,6 +44,12 @@ class AssistidoService:
         usuario = self.usuario_service.get_usuario(usuario_id)
         return AssistidoMapper.map_filmes(
             self.assistido_repository.list_filmes_assistidos(usuario)
+        )
+
+    def list_assistidos_anime(self, usuario_id: int) -> list[AnimeAssistidoRead]:
+        usuario = self.usuario_service.get_usuario(usuario_id)
+        return AssistidoMapper.map_animes(
+            self.assistido_repository.list_animes_assistidos(usuario)
         )
 
     def add_assistido_serie(self, serie_id: int, usuario_id: int):
@@ -74,6 +83,19 @@ class AssistidoService:
 
         self.assistido_repository.add_assistido_filme(filme, usuario)
 
+    def add_assistido_anime(self, anime_id: int, usuario_id: int):
+        usuario = self.usuario_service.get_usuario(usuario_id)
+        anime = self.anime_service.get_anime_from_db(anime_id)
+        if not anime:
+            _, anime = self.anime_service.get_anime_from_api_and_update_database(anime_id)
+
+        if self.assistido_repository.get_assistido_by_conteudo_id_and_usuario_id(
+            anime.conteudo_id, usuario.id
+        ):
+            raise ConflictException("O anime já está na lista de assistidos")
+
+        self.assistido_repository.add_assistido_anime(anime, usuario)
+
     def remove_assistido_serie(self, serie_id: int, usuario_id: int):
         usuario = self.usuario_service.get_usuario(usuario_id)
         serie = self.serie_service.get_serie_from_db(serie_id)
@@ -103,6 +125,22 @@ class AssistidoService:
 
         if not assistido:
             raise NotFoundException("Filme não encontrado na lista de assistidos")
+
+        self.assistido_repository.delete_assistido(assistido)
+
+    def remove_assistido_anime(self, anime_id: int, usuario_id: int):
+        usuario = self.usuario_service.get_usuario(usuario_id)
+        anime = self.anime_service.get_anime_from_db(anime_id)
+        if not anime:
+            raise EntityNotFoundException("Anime", anime_id)
+
+        assistido = self.assistido_repository.get_assistido_by_conteudo_id_and_usuario_id(
+            conteudo_id=anime.conteudo_id,
+            usuario_id=usuario.id,
+        )
+
+        if not assistido:
+            raise NotFoundException("Anime não encontrado na lista de assistidos")
 
         self.assistido_repository.delete_assistido(assistido)
 

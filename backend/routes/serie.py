@@ -4,7 +4,7 @@ from services import SerieServiceDep, AssistidoServiceDep
 from services.favorito import FavoritoServiceDep
 from auth.dependencies import CurrentUsuarioDep
 from schemas.pagination.tmdb import TmdbPage, TmdbPagination, TmdbPaginationParams
-from schemas.serie import SerieListRead, SerieRead
+from schemas.serie import GeneroSerie, SerieFiltros, SerieListRead, SerieRead
 from schemas.favorito import SerieFavoritaRead
 from schemas.assistido import SerieAssistidaRead
 
@@ -13,12 +13,14 @@ series_router = APIRouter(prefix="/series", tags=["Séries"])
 
 @series_router.get("", response_model=TmdbPage[SerieListRead])
 def buscar_series(
-    busca: str,
     serie_service: SerieServiceDep,
+    filtros: SerieFiltros = Depends(SerieFiltros.as_dependency),
+    busca: str | None = None,
     paginacao: TmdbPaginationParams = Depends(),
 ):
     series, total_pages, total_results = serie_service.search_series(
         busca=busca,
+        filtros=filtros,
         page=paginacao.page
     )
 
@@ -71,6 +73,11 @@ def listar_series_populares(
             has_more=paginacao.page < total_pages,
         ),
     )
+@series_router.get("/generos", response_model=list[GeneroSerie])
+def listar_generos_series(serie_service: SerieServiceDep):
+    return serie_service.list_generos()
+
+
 @series_router.get("/favoritas", response_model=list[SerieFavoritaRead])
 def listar_series_favoritas(
     current_user: CurrentUsuarioDep,

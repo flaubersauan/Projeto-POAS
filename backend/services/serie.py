@@ -4,7 +4,7 @@ from fastapi import Depends
 
 from exceptions import EntityNotFoundException
 from repositories import SerieRepositoryDep
-from schemas.serie import SerieListRead, SerieRead
+from schemas.serie import GeneroSerie, SerieFiltros, SerieListRead, SerieRead
 from models.serie import Serie
 from models.conteudo import ApiFonte, TipoConteudo
 from .conteudo import ConteudoServiceDep
@@ -34,8 +34,13 @@ class SerieService:
 
         return result
 
-    def search_series(self, busca: str, page: int=1) -> tuple[list[SerieListRead], int, int]:
-        return self.serie_repository.search_series(busca=busca, page=page)
+    def search_series(
+        self, busca: str | None, filtros: SerieFiltros, page: int = 1
+    ) -> tuple[list[SerieListRead], int, int]:
+        return self.serie_repository.search_series(busca=busca, filtros=filtros, page=page)
+
+    def list_generos(self) -> list[GeneroSerie]:
+        return self.serie_repository.list_generos()
 
     def list_series_em_alta(self, page: int = 1) -> tuple[list[SerieListRead], int, int]:
         return self.serie_repository.list_series_em_alta(page=page)

@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from .assistido import Assistido
     from .filme import Filme
     from .serie import Serie
+    from .anime import Anime
 
 
 class TipoConteudo(enum.Enum):
@@ -67,3 +68,4 @@ class Conteudo(Base):
 
     filme: Mapped["Filme | None"] = relationship(back_populates="conteudo")
     serie: Mapped["Serie | None" ] = relationship(back_populates="conteudo")
+    anime: Mapped["Anime | None"] = relationship(back_populates="conteudo")

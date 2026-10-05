@@ -6,7 +6,7 @@ from sqlalchemy import select
 from utils import get_data, str_to_date
 from constants import TMDB_API_URL, PARAMS_TMDB, HEADERS_TMDB
 from mappers.serie import SerieMapper
-from schemas.serie import SerieListRead, SerieRead
+from schemas.serie import GeneroSerie, SerieFiltros, SerieListRead, SerieRead
 from models.serie import Serie
 from models.conteudo import ApiFonte, Conteudo, TipoConteudo
 from database import SessionDep
@@ -89,16 +89,31 @@ class SerieRepository:
         return serie_api, serie_db
 
     def search_series(
-        self, 
-        busca: str, 
+        self,
+        busca: str | None,
+        filtros: SerieFiltros,
         page: int = 1
     ) -> tuple[list[SerieListRead], int, int]:
         params = PARAMS_TMDB.copy()
-        params["query"] = busca
         params["page"] = page
 
+        if busca:
+            # /search/tv não aceita os filtros do /discover
+            params["query"] = busca
+            url = f"{TMDB_API_URL}/search/tv"
+        else:
+            # Sem busca, lista por /discover aplicando os filtros
+            url = f"{TMDB_API_URL}/discover/tv"
+            if filtros.generos:
+                params["with_genres"] = ",".join(str(genero_id) for genero_id in filtros.generos)
+            if filtros.ano is not None:
+                params["first_air_date_year"] = filtros.ano
+            if filtros.nota_minima is not None:
+                params["vote_average.gte"] = filtros.nota_minima
+            params["sort_by"] = f"{filtros.ordenar_por.value}.{filtros.ordem.value}"
+
         data = get_data(
-            f"{TMDB_API_URL}/search/tv", params=params, headers=HEADERS_TMDB
+            url, params=params, headers=HEADERS_TMDB
         )
 
         series = SerieMapper.map_series(data.get("results", []))
@@ -106,6 +121,18 @@ class SerieRepository:
         total_results = data.get("total_results", 0)
 
         return series, total_pages, total_results
+
+    def list_generos(self) -> list[GeneroSerie]:
+        data = get_data(
+            f"{TMDB_API_URL}/genre/tv/list",
+            params=PARAMS_TMDB,
+            headers=HEADERS_TMDB,
+        )
+
+        return [
+            GeneroSerie(id=int(genero["id"]), nome=genero["name"])
+            for genero in data.get("genres", [])
+        ]
 
     def list_series_em_alta(self, page: int = 1) -> tuple[list[SerieListRead], int, int]:
         params = PARAMS_TMDB.copy()

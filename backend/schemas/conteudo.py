@@ -1,7 +1,13 @@
 from datetime import datetime
+from enum import Enum
 
 from models.conteudo import TipoConteudo, ApiFonte
 from .base import Base
+
+
+class Ordem(str, Enum):
+    ASC = "asc"
+    DESC = "desc"
 
 
 class ImagensConteudo(Base):

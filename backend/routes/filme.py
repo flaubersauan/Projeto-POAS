@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 
 from auth.dependencies import CurrentUsuarioDep
 from schemas.pagination.tmdb import TmdbPage, TmdbPagination, TmdbPaginationParams
-from schemas.filme import FilmeListRead, FilmeRead
+from schemas.filme import FilmeFiltros, FilmeListRead, FilmeRead, GeneroFilme
 from schemas.favorito import FilmeFavoritoRead
 from schemas.assistido import FilmeAssistidoRead
 from services import AssistidoServiceDep, FilmeServiceDep
@@ -13,12 +13,14 @@ filmes_router = APIRouter(prefix="/filmes", tags=["filmes"])
 
 @filmes_router.get("", response_model=TmdbPage[FilmeListRead])
 def buscar_filmes(
-    busca: str,
     filme_service: FilmeServiceDep,
+    filtros: FilmeFiltros = Depends(FilmeFiltros.as_dependency),
+    busca: str | None = None,
     paginacao: TmdbPaginationParams = Depends()
 ):
     filmes, total_pages, total_results = filme_service.search_filmes(
         busca=busca,
+        filtros=filtros,
         page=paginacao.page,
     )
 
@@ -91,6 +93,11 @@ def listar_filmes_em_breve(
             has_more=paginacao.page < total_pages,
         ),
     )
+
+
+@filmes_router.get("/generos", response_model=list[GeneroFilme])
+def listar_generos_filmes(filme_service: FilmeServiceDep):
+    return filme_service.list_generos()
 
 
 @filmes_router.get("/favoritos", response_model=list[FilmeFavoritoRead])

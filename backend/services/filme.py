@@ -6,7 +6,7 @@ from exceptions import EntityNotFoundException
 from models.conteudo import ApiFonte, TipoConteudo
 from models.filme import Filme
 from repositories import FilmeRepositoryDep
-from schemas.filme import FilmeListRead, FilmeRead
+from schemas.filme import FilmeFiltros, FilmeListRead, FilmeRead, GeneroFilme
 from .conteudo import ConteudoServiceDep
 
 
@@ -39,9 +39,12 @@ class FilmeService:
         return filme
 
     def search_filmes(
-        self, busca: str, page: int = 1
+        self, busca: str | None, filtros: FilmeFiltros, page: int = 1
     ) -> tuple[list[FilmeListRead], int, int]:
-        return self.filme_repository.search_filmes(busca=busca, page=page)
+        return self.filme_repository.search_filmes(busca=busca, filtros=filtros, page=page)
+
+    def list_generos(self) -> list[GeneroFilme]:
+        return self.filme_repository.list_generos()
 
     def list_filmes_em_alta(
         self, page: int = 1

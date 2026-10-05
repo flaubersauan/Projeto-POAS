@@ -1,6 +1,7 @@
 from schemas.conteudo import ImagensConteudo
-from schemas.favorito import FilmeFavoritoRead, SerieFavoritaRead
+from schemas.favorito import AnimeFavoritoRead, FilmeFavoritoRead, SerieFavoritaRead
 from models import (
+    Anime,
     Favorito,
     Filme,
     Serie,
@@ -52,4 +53,27 @@ class FavoritoMapper:
         return [
             FavoritoMapper.map_filme(filme, favorito)
             for filme, favorito in items
+        ]
+
+    @staticmethod
+    def map_anime(anime: Anime, favorito: Favorito) -> AnimeFavoritoRead:
+        # Kitsu já retorna URLs completas, sem prefixo de imagem do TMDB
+        return AnimeFavoritoRead(
+            id=anime.conteudo.id_externo,
+            titulo=anime.titulo,
+            titulo_original=anime.titulo_original,
+            status=anime.status,
+            imagens=ImagensConteudo(
+                capa=anime.capa,
+                banner=anime.banner,
+            ),
+            data_lancamento=anime.data_lancamento,
+            data_adicao=favorito.data_adicao,
+        )
+
+    @staticmethod
+    def map_animes(items: list[tuple[Anime, Favorito]]) -> list[AnimeFavoritoRead]:
+        return [
+            FavoritoMapper.map_anime(anime, favorito)
+            for anime, favorito in items
         ]

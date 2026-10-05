@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import contains_eager
 
 from database import SessionDep
-from models import Assistido, Usuario, Filme, Serie
+from models import Anime, Assistido, Usuario, Filme, Serie
 
 
 class AssistidoRepository:
@@ -50,6 +50,16 @@ class AssistidoRepository:
             .where(Assistido.usuario == usuario)
         ).all()
 
+    def list_animes_assistidos(self, usuario: Usuario) -> list[tuple[Anime, Assistido]]:
+        return self.session.execute(
+            select(Anime, Assistido)
+            .select_from(Assistido)
+            .join(Anime, Anime.conteudo_id == Assistido.conteudo_id)
+            .join(Anime.conteudo)
+            .options(contains_eager(Anime.conteudo))
+            .where(Assistido.usuario == usuario)
+        ).all()
+
     def add_assistido_serie(self, serie: Serie, usuario: Usuario) -> Assistido:
         assistido = Assistido(
             conteudo=serie.conteudo,
@@ -60,6 +70,13 @@ class AssistidoRepository:
     def add_assistido_filme(self, filme: Filme, usuario: Usuario) -> Assistido:
         assistido = Assistido(
             conteudo=filme.conteudo,
+            usuario=usuario,
+        )
+        return self.create_assistido(assistido)
+
+    def add_assistido_anime(self, anime: Anime, usuario: Usuario) -> Assistido:
+        assistido = Assistido(
+            conteudo=anime.conteudo,
             usuario=usuario,
         )
         return self.create_assistido(assistido)

@@ -7,8 +7,8 @@ from .base import Base
 
 
 class AvaliacaoCreate(Base):
-    conteudo_id: int
-    usuario_id: int
+    conteudo_id: Optional[int] = None
+    usuario_id: Optional[int] = None
     estrelas: Decimal = Field(
         ge=1, le=5, multiple_of=0.5, decimal_places=1
     )  # >= 1 e <= 5, step de 0.5

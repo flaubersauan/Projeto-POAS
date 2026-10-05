@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, status
 
-from services import SerieServiceDep, AssistidoServiceDep
+from services import AvaliacaoServiceDep, SerieServiceDep, AssistidoServiceDep
 from services.favorito import FavoritoServiceDep
 from auth.dependencies import CurrentUsuarioDep
 from schemas.pagination.tmdb import TmdbPage, TmdbPagination, TmdbPaginationParams
 from schemas.serie import GeneroSerie, SerieFiltros, SerieListRead, SerieRead
 from schemas.favorito import SerieFavoritaRead
 from schemas.assistido import SerieAssistidaRead
+from schemas.avaliacao import AvaliacaoCreate, AvaliacaoRead, AvaliacaoUpdate
 
 
 series_router = APIRouter(prefix="/series", tags=["Séries"])
@@ -98,6 +99,47 @@ def listar_series_assistidas(
 def buscar_serie(serie_id: int, serie_service: SerieServiceDep):
     serie, _ = serie_service.get_serie_from_api_and_update_database(serie_id=serie_id)
     return serie
+
+
+@series_router.get("/{serie_id}/avaliacoes", response_model=list[AvaliacaoRead])
+def listar_avaliacoes_da_serie(
+    serie_id: int,
+    avaliacao_service: AvaliacaoServiceDep,
+):
+    return avaliacao_service.list_avaliacoes_conteudo(serie_id)
+
+
+@series_router.post(
+    "/{serie_id}/avaliacoes",
+    response_model=AvaliacaoRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def criar_avaliacao_da_serie(
+    serie_id: int,
+    avaliacao: AvaliacaoCreate,
+    current_user: CurrentUsuarioDep,
+    avaliacao_service: AvaliacaoServiceDep,
+):
+    return avaliacao_service.create_avaliacao(serie_id, current_user.id, avaliacao)
+
+
+@series_router.patch("/{serie_id}/avaliacoes", response_model=AvaliacaoRead)
+def atualizar_avaliacao_da_serie(
+    serie_id: int,
+    avaliacao: AvaliacaoUpdate,
+    current_user: CurrentUsuarioDep,
+    avaliacao_service: AvaliacaoServiceDep,
+):
+    return avaliacao_service.update_avaliacao(serie_id, current_user.id, avaliacao)
+
+
+@series_router.delete("/{serie_id}/avaliacoes", status_code=status.HTTP_204_NO_CONTENT)
+def remover_avaliacao_da_serie(
+    serie_id: int,
+    current_user: CurrentUsuarioDep,
+    avaliacao_service: AvaliacaoServiceDep,
+):
+    avaliacao_service.delete_avaliacao(serie_id, current_user.id)
 
 
 @series_router.post("/{serie_id}/favoritos", status_code=status.HTTP_204_NO_CONTENT)

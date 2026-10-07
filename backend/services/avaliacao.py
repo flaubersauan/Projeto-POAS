@@ -5,7 +5,7 @@ from fastapi import Depends
 from exceptions import ConflictException, NotFoundException
 from models import Avaliacao
 from repositories import AvaliacaoRepositoryDep
-from schemas.avaliacao import AvaliacaoCreate, AvaliacaoUpdate
+from schemas.avaliacao import AvaliacaoCreate, AvaliacaoUpdate, AvaliacaoSerieRead
 from services.usuario import UsuarioServiceDep
 from services.conteudo import ConteudoServiceDep
 from services.serie import SerieServiceDep
@@ -73,7 +73,7 @@ class AvaliacaoService:
 
     def update_avaliacao(
         self, serie_id: int, usuario_id: int, avaliacao_data: AvaliacaoUpdate
-    ) -> Avaliacao:
+    ) -> AvaliacaoSerieRead:
         usuario = self.usuario_service.get_usuario(usuario_id)
         serie = self.serie_service.get_serie_from_db(serie_id)
         if not serie:
@@ -91,7 +91,17 @@ class AvaliacaoService:
         if avaliacao_data.comentario is not None:
             avaliacao.comentario = avaliacao_data.comentario
 
-        return self.avaliacao_repository.update_avaliacao(avaliacao)
+        avaliacao_atualizada = self.avaliacao_repository.update_avaliacao(avaliacao)
+
+        return AvaliacaoSerieRead(
+            id=avaliacao_atualizada.id,
+            usuario_id=avaliacao_atualizada.usuario_id,
+            estrelas=avaliacao_atualizada.estrelas,
+            comentario=avaliacao_atualizada.comentario,
+            data_criacao=avaliacao_atualizada.data_criacao,
+            data_atualizacao=avaliacao_atualizada.data_atualizacao,
+            serie_id=serie.id,
+        )
 
     def delete_avaliacao(self, serie_id: int, usuario_id: int):
         usuario = self.usuario_service.get_usuario(usuario_id)

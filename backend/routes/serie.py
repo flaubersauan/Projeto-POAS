@@ -7,7 +7,12 @@ from schemas.pagination.tmdb import TmdbPage, TmdbPagination, TmdbPaginationPara
 from schemas.serie import GeneroSerie, SerieFiltros, SerieListRead, SerieRead
 from schemas.favorito import SerieFavoritaRead
 from schemas.assistido import SerieAssistidaRead
-from schemas.avaliacao import AvaliacaoCreate, AvaliacaoRead, AvaliacaoUpdate
+from schemas.avaliacao import (
+    AvaliacaoCreate,
+    AvaliacaoReadBase,
+    AvaliacaoUpdate,
+    AvaliacaoSerieRead,
+)
 
 
 series_router = APIRouter(prefix="/series", tags=["Séries"])
@@ -101,7 +106,7 @@ def buscar_serie(serie_id: int, serie_service: SerieServiceDep):
     return serie
 
 
-@series_router.get("/{serie_id}/avaliacoes", response_model=list[AvaliacaoRead])
+@series_router.get("/{serie_id}/avaliacoes", response_model=list[AvaliacaoSerieRead])
 def listar_avaliacoes_da_serie(
     serie_id: int,
     avaliacao_service: AvaliacaoServiceDep,
@@ -111,7 +116,7 @@ def listar_avaliacoes_da_serie(
 
 @series_router.post(
     "/{serie_id}/avaliacoes",
-    response_model=AvaliacaoRead,
+    response_model=AvaliacaoSerieRead,
     status_code=status.HTTP_201_CREATED,
 )
 def criar_avaliacao_da_serie(
@@ -123,7 +128,7 @@ def criar_avaliacao_da_serie(
     return avaliacao_service.create_avaliacao(serie_id, current_user.id, avaliacao)
 
 
-@series_router.patch("/{serie_id}/avaliacoes", response_model=AvaliacaoRead)
+@series_router.patch("/{serie_id}/avaliacoes", response_model=AvaliacaoSerieRead)
 def atualizar_avaliacao_da_serie(
     serie_id: int,
     avaliacao: AvaliacaoUpdate,

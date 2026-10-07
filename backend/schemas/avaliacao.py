@@ -7,17 +7,14 @@ from .base import Base
 
 
 class AvaliacaoCreate(Base):
-    conteudo_id: int
-    usuario_id: int
     estrelas: Decimal = Field(
         ge=1, le=5, multiple_of=0.5, decimal_places=1
     )  # >= 1 e <= 5, step de 0.5
     comentario: Optional[str] = None
 
 
-class AvaliacaoRead(Base):
+class AvaliacaoReadBase(Base):
     id: int
-    conteudo_id: int
     usuario_id: int
     estrelas: Decimal
     comentario: Optional[str]
@@ -30,3 +27,13 @@ class AvaliacaoUpdate(Base):
         default=None, ge=1, le=5, multiple_of=0.5, decimal_places=1
     )  # >= 1 e <= 5, step de 0.5
     comentario: Optional[str] = None
+
+
+class AvaliacaoSerieRead(AvaliacaoReadBase):
+    serie_id: int
+
+class AvaliacaoFilmeRead(AvaliacaoReadBase):
+    filme_id: int
+
+class AvaliacaoAnimeRead(AvaliacaoReadBase):
+    anime_id: int

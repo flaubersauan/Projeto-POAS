@@ -22,6 +22,17 @@ class AvaliacaoRepository:
             .all()
         )
 
+    def list_avaliacoes_by_conteudo(self, conteudo: Conteudo) -> list[Avaliacao]:
+        """Retorna todas as avaliações de um conteúdo específico."""
+        return (
+            self.session.scalars(
+                select(Avaliacao)
+                .where(Avaliacao.conteudo_id == conteudo.id)
+                .order_by(Avaliacao.data_criacao.desc())
+            )
+            .all()
+        )
+
     def get_avaliacao_by_usuario_and_conteudo(
         self, usuario: Usuario, conteudo: Conteudo
     ) -> Avaliacao | None:
@@ -32,6 +43,19 @@ class AvaliacaoRepository:
                 Avaliacao.conteudo_id == conteudo.id,
             )
         )
+
+    def create_avaliacao(self, avaliacao: Avaliacao) -> Avaliacao:
+        self.session.add(avaliacao)
+        self.session.flush()
+        return avaliacao
+
+    def update_avaliacao(self, avaliacao: Avaliacao) -> Avaliacao:
+        self.session.flush()
+        return avaliacao
+
+    def delete_avaliacao(self, avaliacao: Avaliacao):
+        self.session.delete(avaliacao)
+        self.session.flush()
 
 
 AvaliacaoRepositoryDep = Annotated[

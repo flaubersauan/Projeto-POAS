@@ -26,12 +26,12 @@ if not TMDB_KEY:
     raise ValueError("TMDB_API_KEY não encontrada no arquivo .env")
 
 PARAMS_TMDB = {
-    "language": "pt-BR",
-    "api_key": TMDB_KEY
+    "language": "pt-BR"
 }
 
 HEADERS_TMDB = {
-    "accept": "application/json"
+    "accept": "application/json",
+    "Authorization": f"Bearer {TMDB_KEY}"
 }
 HEADERS_KITSU = {
     "Accept": "application/vnd.api+json",

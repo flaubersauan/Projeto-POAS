@@ -34,8 +34,22 @@ class AvaliacaoService:
         serie = self.serie_service.get_serie_from_db(serie_id)
         if not serie:
             _, serie = self.serie_service.get_serie_from_api_and_update_database(serie_id)
+        avaliacoes = self.avaliacao_repository.list_avaliacoes_by_conteudo(
+            serie.conteudo
+        )
 
-        return self.avaliacao_repository.list_avaliacoes_by_conteudo(serie.conteudo)
+        return [
+            AvaliacaoSerieRead(
+                id=a.id,
+                usuario_id=a.usuario_id,
+                estrelas=a.estrelas,
+                comentario=a.comentario,
+                data_criacao=a.data_criacao,
+                data_atualizacao=a.data_atualizacao,
+                serie_id=serie_id,
+            )
+            for a in avaliacoes
+        ]
 
     def get_avaliacao_usuario_conteudo(
         self, usuario_id: int, conteudo_id: int
@@ -69,7 +83,18 @@ class AvaliacaoService:
             estrelas=avaliacao_data.estrelas,
             comentario=avaliacao_data.comentario,
         )
-        return self.avaliacao_repository.create_avaliacao(avaliacao)
+
+        avaliacao_criada = self.avaliacao_repository.create_avaliacao(avaliacao)
+
+        return AvaliacaoSerieRead(
+            id=avaliacao_criada.id,
+            usuario_id=avaliacao_criada.usuario_id,
+            estrelas=avaliacao_criada.estrelas,
+            comentario=avaliacao_criada.comentario,
+            data_criacao=avaliacao_criada.data_criacao,
+            data_atualizacao=avaliacao_criada.data_atualizacao,
+            serie_id=serie_id,
+        )
 
     def update_avaliacao(
         self, serie_id: int, usuario_id: int, avaliacao_data: AvaliacaoUpdate
@@ -100,7 +125,7 @@ class AvaliacaoService:
             comentario=avaliacao_atualizada.comentario,
             data_criacao=avaliacao_atualizada.data_criacao,
             data_atualizacao=avaliacao_atualizada.data_atualizacao,
-            serie_id=serie.id,
+            serie_id=serie_id,
         )
 
     def delete_avaliacao(self, serie_id: int, usuario_id: int):

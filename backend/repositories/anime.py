@@ -11,6 +11,7 @@ from models.anime import Anime
 from models.conteudo import ApiFonte, Conteudo, TipoConteudo
 from schemas.anime import AnimeFiltros, AnimeRead, CategoriaRead
 from schemas.conteudo import Ordem
+from schemas.pagination.kitsu import KitsuPaginationParams
 from utils import get_data, str_to_date
 
 
@@ -35,9 +36,9 @@ class AnimeRepository:
         return animes, total_results
 
     def _build_filter_params(
-        self, filtros: AnimeFiltros, limit: int, offset: int
+        self, filtros: AnimeFiltros, paginacao: KitsuPaginationParams
     ) -> dict:
-        params: dict = {"page[limit]": limit, "page[offset]": offset}
+        params: dict = paginacao.to_kitsu_query_params()
 
         if filtros.busca:
             params["filter[text]"] = filtros.busca
@@ -73,52 +74,41 @@ class AnimeRepository:
         return params
 
     def search_animes(
-        self, filtros: AnimeFiltros, limit: int, offset: int
+        self, filtros: AnimeFiltros, paginacao: KitsuPaginationParams
     ) -> tuple[list[AnimeRead], int]:
-        params = self._build_filter_params(filtros, limit, offset)
+        params = self._build_filter_params(filtros, paginacao)
         return self._fetch_animes(params)
 
+    # TODO tá retornando só os animes populares
     def list_animes_em_alta(
-        self, limit: int, offset: int
+        self, paginacao: KitsuPaginationParams
     ) -> tuple[list[AnimeRead], int]:
         # /trending/anime do Kitsu não retorna meta.count,
         # então usa o /anime ordenado por popularidade para manter a paginação
-        params = {
-            "page[limit]": limit,
-            "page[offset]": offset,
-            "sort": "popularityRank",
-        }
+        params = paginacao.to_kitsu_query_params()
+        params["sort"] = "popularityRank"
         return self._fetch_animes(params)
 
     def list_animes_populares(
-        self, limit: int, offset: int
+        self, paginacao: KitsuPaginationParams
     ) -> tuple[list[AnimeRead], int]:
-        params = {
-            "page[limit]": limit,
-            "page[offset]": offset,
-            "sort": "-userCount",
-        }
+        params = paginacao.to_kitsu_query_params()
+        params["sort"] = "-userCount"
         return self._fetch_animes(params)
 
     def list_animes_em_breve(
-        self, limit: int, offset: int
+        self, paginacao: KitsuPaginationParams
     ) -> tuple[list[AnimeRead], int]:
-        params = {
-            "page[limit]": limit,
-            "page[offset]": offset,
-            "filter[status]": "upcoming",
-            "sort": "-startDate",
-        }
+        params = paginacao.to_kitsu_query_params()
+        params["sort"] = "-startDate"
+        params["filter[status]"] = "upcoming"
         return self._fetch_animes(params)
 
     def list_categorias(
-        self, limit: int, offset: int
+        self, paginacao: KitsuPaginationParams
     ) -> tuple[list[CategoriaRead], int]:
-        params = {
-            "page[limit]": limit,
-            "page[offset]": offset,
-            "sort": "-totalMediaCount",
-        }
+        params = paginacao.to_kitsu_query_params()
+        params["sort"] = "-totalMediaCount"
 
         data = get_data(
             f"{KITSU_API_URL}/categories", params=params, headers=HEADERS_KITSU

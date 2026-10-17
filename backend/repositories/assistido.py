@@ -1,11 +1,12 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import contains_eager
 
 from database import SessionDep
 from models import Anime, Assistido, Usuario, Filme, Serie
+from schemas.pagination.cursor import OrdenacaoCursor
 
 
 class AssistidoRepository:
@@ -30,35 +31,146 @@ class AssistidoRepository:
             select(Assistido).where(Assistido.usuario == usuario)
         )
 
-    def list_series_assistidas(self, usuario: Usuario) -> list[tuple[Serie, Assistido]]:
-        return self.session.execute(
-            select(Serie, Assistido)
-            .select_from(Assistido)
-            .join(Serie, Serie.conteudo_id == Assistido.conteudo_id)
+    def list_series_assistidas(
+        self,
+        usuario: Usuario,
+        last_id: int,
+        limit: int,
+        ordenacao: OrdenacaoCursor,
+    ) -> tuple[list[tuple[Serie, Assistido]], bool]:
+        cursor_date = self.session.scalar(
+            select(Assistido.data_adicao).where(
+                Assistido.id == last_id, Assistido.usuario_id == usuario.id
+            )
+        )
+        query = select(Serie, Assistido).select_from(Assistido)
+        if cursor_date:
+            operator = (
+                (Assistido.data_adicao < cursor_date, Assistido.id < last_id)
+                if ordenacao is OrdenacaoCursor.RECENTES
+                else (Assistido.data_adicao > cursor_date, Assistido.id > last_id)
+            )
+            query = query.where(
+                or_(
+                    operator[0],
+                    and_(Assistido.data_adicao == cursor_date, operator[1]),
+                )
+            )
+        items = self.session.execute(
+            query.join(Serie, Serie.conteudo_id == Assistido.conteudo_id)
             .join(Serie.conteudo)
             .options(contains_eager(Serie.conteudo))
-            .where(Assistido.usuario == usuario)
+            .where(Assistido.usuario_id == usuario.id)
+            .order_by(
+                (
+                    Assistido.data_adicao.desc()
+                    if ordenacao is OrdenacaoCursor.RECENTES
+                    else Assistido.data_adicao.asc()
+                ),
+                (
+                    Assistido.id.desc()
+                    if ordenacao is OrdenacaoCursor.RECENTES
+                    else Assistido.id.asc()
+                ),
+            )
+            .limit(limit + 1)
         ).all()
+        has_more = len(items) > limit
+        return items[:limit], has_more
 
-    def list_filmes_assistidos(self, usuario: Usuario) -> list[tuple[Filme, Assistido]]:
-        return self.session.execute(
-            select(Filme, Assistido)
-            .select_from(Assistido)
-            .join(Filme, Filme.conteudo_id == Assistido.conteudo_id)
+    def list_filmes_assistidos(
+        self,
+        usuario: Usuario,
+        last_id: int,
+        limit: int,
+        ordenacao: OrdenacaoCursor,
+    ) -> tuple[list[tuple[Filme, Assistido]], bool]:
+        cursor_date = self.session.scalar(
+            select(Assistido.data_adicao).where(
+                Assistido.id == last_id, Assistido.usuario_id == usuario.id
+            )
+        )
+        query = select(Filme, Assistido).select_from(Assistido)
+        if cursor_date:
+            operator = (
+                (Assistido.data_adicao < cursor_date, Assistido.id < last_id)
+                if ordenacao is OrdenacaoCursor.RECENTES
+                else (Assistido.data_adicao > cursor_date, Assistido.id > last_id)
+            )
+            query = query.where(
+                or_(
+                    operator[0],
+                    and_(Assistido.data_adicao == cursor_date, operator[1]),
+                )
+            )
+        items = self.session.execute(
+            query.join(Filme, Filme.conteudo_id == Assistido.conteudo_id)
             .join(Filme.conteudo)
             .options(contains_eager(Filme.conteudo))
-            .where(Assistido.usuario == usuario)
+            .where(Assistido.usuario_id == usuario.id)
+            .order_by(
+                (
+                    Assistido.data_adicao.desc()
+                    if ordenacao is OrdenacaoCursor.RECENTES
+                    else Assistido.data_adicao.asc()
+                ),
+                (
+                    Assistido.id.desc()
+                    if ordenacao is OrdenacaoCursor.RECENTES
+                    else Assistido.id.asc()
+                ),
+            )
+            .limit(limit + 1)
         ).all()
+        has_more = len(items) > limit
+        return items[:limit], has_more
 
-    def list_animes_assistidos(self, usuario: Usuario) -> list[tuple[Anime, Assistido]]:
-        return self.session.execute(
-            select(Anime, Assistido)
-            .select_from(Assistido)
-            .join(Anime, Anime.conteudo_id == Assistido.conteudo_id)
+    def list_animes_assistidos(
+        self,
+        usuario: Usuario,
+        last_id: int,
+        limit: int,
+        ordenacao: OrdenacaoCursor,
+    ) -> tuple[list[tuple[Anime, Assistido]], bool]:
+        cursor_date = self.session.scalar(
+            select(Assistido.data_adicao).where(
+                Assistido.id == last_id, Assistido.usuario_id == usuario.id
+            )
+        )
+        query = select(Anime, Assistido).select_from(Assistido)
+        if cursor_date:
+            operator = (
+                (Assistido.data_adicao < cursor_date, Assistido.id < last_id)
+                if ordenacao is OrdenacaoCursor.RECENTES
+                else (Assistido.data_adicao > cursor_date, Assistido.id > last_id)
+            )
+            query = query.where(
+                or_(
+                    operator[0],
+                    and_(Assistido.data_adicao == cursor_date, operator[1]),
+                )
+            )
+        items = self.session.execute(
+            query.join(Anime, Anime.conteudo_id == Assistido.conteudo_id)
             .join(Anime.conteudo)
             .options(contains_eager(Anime.conteudo))
-            .where(Assistido.usuario == usuario)
+            .where(Assistido.usuario_id == usuario.id)
+            .order_by(
+                (
+                    Assistido.data_adicao.desc()
+                    if ordenacao is OrdenacaoCursor.RECENTES
+                    else Assistido.data_adicao.asc()
+                ),
+                (
+                    Assistido.id.desc()
+                    if ordenacao is OrdenacaoCursor.RECENTES
+                    else Assistido.id.asc()
+                ),
+            )
+            .limit(limit + 1)
         ).all()
+        has_more = len(items) > limit
+        return items[:limit], has_more
 
     def add_assistido_serie(self, serie: Serie, usuario: Usuario) -> Assistido:
         assistido = Assistido(

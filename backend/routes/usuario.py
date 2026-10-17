@@ -9,7 +9,11 @@ from schemas.usuario import (
 from schemas.avaliacao import AvaliacaoUsuarioRead
 
 # from schemas.favorito import FavoritoRead
-from schemas.pagination.cursor import CursorPaginationParams, CursorPage
+from schemas.pagination.cursor import (
+    CursorMediaPaginationParams,
+    CursorPaginationParams,
+    CursorPage,
+)
 from auth.dependencies import CurrentUsuarioDep
 
 usuario_router = APIRouter(prefix="/usuarios", tags=["usuarios"])
@@ -33,12 +37,19 @@ def criar_usuario(usuario_json: UsuarioCreate, usuario_service: UsuarioServiceDe
     return usuario_service.create_usuario(usuario_json)
 
 
-@usuario_router.get("/avaliacoes", response_model=list[AvaliacaoUsuarioRead])
+@usuario_router.get("/avaliacoes", response_model=CursorPage[AvaliacaoUsuarioRead])
 def listar_avaliacoes_do_usuario_logado(
     current_user: CurrentUsuarioDep,
     avaliacao_service: AvaliacaoServiceDep,
+    paging_params: CursorMediaPaginationParams = Depends(),
 ):
-    return avaliacao_service.list_avaliacoes_usuario(current_user.id)
+    avaliacoes, paging = avaliacao_service.list_avaliacoes_usuario(
+        current_user.id,
+        paging_params.cursor,
+        paging_params.limit,
+        paging_params.ordenacao,
+    )
+    return CursorPage(data=avaliacoes, pagination=paging)
 
 
 # @usuario_router.get("/favoritos", response_model=list[FavoritoRead])

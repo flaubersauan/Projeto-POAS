@@ -102,6 +102,43 @@ Quando o cursor informado ultrapassa o último ID disponível, a API retorna
 Os esquemas envolvidos são `CursorPaginationParams`, `CursorPagination` e
 `CursorPage[T]`.
 
+As listagens de conteúdos assistidos também utilizam paginação por cursor:
+
+- `GET /filmes/assistidos`;
+- `GET /series/assistidas`;
+- `GET /animes/assistidos`.
+
+Esses endpoints recebem os mesmos parâmetros `limit` e `cursor` e retornam
+`CursorPage[T]`. O cursor corresponde ao `id` do registro de assistência, e
+não ao ID externo do filme, série ou anime.
+
+As listagens de conteúdos favoritos seguem o mesmo contrato:
+
+- `GET /filmes/favoritos`;
+- `GET /series/favoritas`;
+- `GET /animes/favoritos`.
+
+O cursor corresponde ao `id` do registro de favorito.
+
+As avaliações também utilizam paginação por cursor:
+
+- `GET /usuarios/avaliacoes`;
+- `GET /filmes/{filme_id}/avaliacoes`;
+- `GET /series/{serie_id}/avaliacoes`;
+- `GET /animes/{anime_id}/avaliacoes`.
+
+O cursor corresponde ao `id` da avaliação.
+
+As listagens de favoritos, assistidos e avaliações aceitam o parâmetro
+`ordenacao`:
+
+- `ordenacao=recentes` (padrão): mais recentes primeiro;
+- `ordenacao=antigos`: mais antigos primeiro.
+
+Quando a listagem é paginada, o cursor continua sendo o ID do registro, mas a
+consulta usa a data da linha apontada pelo cursor e o ID como desempate. Isso
+mantém a navegação correta mesmo quando dois registros possuem a mesma data.
+
 ## Paginação do TMDB
 
 O TMDB utiliza páginas numeradas. A API recebe `page` e `limit`; o parâmetro

@@ -7,6 +7,7 @@ from schemas.pagination.tmdb import TmdbPage, TmdbPagination, TmdbPaginationPara
 from schemas.serie import GeneroSerie, SerieFiltros, SerieListRead, SerieRead
 from schemas.favorito import SerieFavoritaRead
 from schemas.assistido import SerieAssistidaRead
+from schemas.pagination.cursor import CursorMediaPaginationParams, CursorPage
 from schemas.avaliacao import (
     AvaliacaoConteudoRead,
     AvaliacaoCreate,
@@ -84,19 +85,34 @@ def listar_generos_series(serie_service: SerieServiceDep):
     return serie_service.list_generos()
 
 
-@series_router.get("/favoritas", response_model=list[SerieFavoritaRead])
+@series_router.get("/favoritas", response_model=CursorPage[SerieFavoritaRead])
 def listar_series_favoritas(
-    current_user: CurrentUsuarioDep, favorito_service: FavoritoServiceDep
+    current_user: CurrentUsuarioDep,
+    favorito_service: FavoritoServiceDep,
+    paging_params: CursorMediaPaginationParams = Depends(),
 ):
-    return favorito_service.list_favoritos_serie(current_user.id)
+    series, paging = favorito_service.list_favoritos_serie(
+        current_user.id,
+        paging_params.cursor,
+        paging_params.limit,
+        paging_params.ordenacao,
+    )
+    return CursorPage(data=series, pagination=paging)
 
 
-@series_router.get("/assistidas", response_model=list[SerieAssistidaRead])
+@series_router.get("/assistidas", response_model=CursorPage[SerieAssistidaRead])
 def listar_series_assistidas(
     current_user: CurrentUsuarioDep,
     assistido_service: AssistidoServiceDep,
+    paging_params: CursorMediaPaginationParams = Depends(),
 ):
-    return assistido_service.list_assistidos_serie(current_user.id)
+    series, paging = assistido_service.list_assistidos_serie(
+        current_user.id,
+        paging_params.cursor,
+        paging_params.limit,
+        paging_params.ordenacao,
+    )
+    return CursorPage(data=series, pagination=paging)
 
 
 @series_router.get("/{serie_id}", response_model=SerieRead)
@@ -105,12 +121,21 @@ def buscar_serie(serie_id: int, serie_service: SerieServiceDep):
     return serie
 
 
-@series_router.get("/{serie_id}/avaliacoes", response_model=list[AvaliacaoConteudoRead])
+@series_router.get(
+    "/{serie_id}/avaliacoes", response_model=CursorPage[AvaliacaoConteudoRead]
+)
 def listar_avaliacoes_da_serie(
     serie_id: int,
     avaliacao_service: AvaliacaoServiceDep,
+    paging_params: CursorMediaPaginationParams = Depends(),
 ):
-    return avaliacao_service.list_avaliacoes_serie(serie_id)
+    avaliacoes, paging = avaliacao_service.list_avaliacoes_serie(
+        serie_id,
+        paging_params.cursor,
+        paging_params.limit,
+        paging_params.ordenacao,
+    )
+    return CursorPage(data=avaliacoes, pagination=paging)
 
 
 @series_router.post(

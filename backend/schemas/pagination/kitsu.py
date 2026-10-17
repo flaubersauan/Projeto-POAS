@@ -5,16 +5,16 @@ T = TypeVar("T")
 
 
 class KitsuPaginationParams(BaseModel):
-    limit: int = Field(default=20, gt=0, le=20)
-    offset: int = Field(default=0, ge=0)
+    page: int = Field(default=1, ge=1)
+    # limit: int = Field(default=20, gt=0, le=20)
 
     def to_kitsu_query_params(self):
-        return {"page[limit]": self.limit, "page[offset]": self.offset}
+        return {"page[number]": self.page, "page[size]": 20}
 
 
 class KitsuPagination(BaseModel):
-    limit: int
-    offset: int
+    page: int
+    # limit: int
     total_results: int
     has_more: bool
 

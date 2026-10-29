@@ -13,9 +13,6 @@ def _get_env(name: str) -> str:
 
 
 STORAGE = "storage/usuarios/fotos"
-BASE_URL = _get_env("BASE_URL")  # utilizada no retorno da foto_perfil_url do usuário
-if not BASE_URL:
-    raise ValueError("BASE_URL não encontrado no arquivo .env")
 
 KITSU_API_URL = "https://kitsu.io/api/edge"
 TMDB_API_URL = "https://api.themoviedb.org/3"

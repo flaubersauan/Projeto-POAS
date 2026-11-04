@@ -1,0 +1,37 @@
+# Segredos e configuração local
+.env
+.env.*
+!.env.example
+
+# Dependências (instaladas dentro da imagem com npm ci)
+node_modules
+.pnp
+.pnp.*
+.yarn
+
+# Build e cache do Next (gerados dentro da imagem)
+.next
+out
+build
+*.tsbuildinfo
+next-env.d.ts
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Git
+.git
+.gitignore
+
+# Editores
+.vscode
+.idea
+
+# Docker
+Dockerfile
+dockerfile
+.dockerignore
+docker-compose*.yml
